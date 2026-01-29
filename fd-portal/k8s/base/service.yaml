@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: fd-portal
+  namespace: fd-portal
+spec:
+  type: LoadBalancer
+  selector:
+    app: fd-portal
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8000

@@ -1,0 +1,22 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: fd-portal
+  namespace: fd-portal
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - console.minizon.net
+      secretName: fd-portal-tls
+  rules:
+    - host: console.minizon.net
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: fd-portal
+                port:
+                  number: 80
