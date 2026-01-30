@@ -3,11 +3,17 @@ kind: Service
 metadata:
   name: fd-portal
   namespace: fd-portal
+  annotations:
+    # openstack-specific annotations would go here (if your cluster uses them)
 spec:
   type: LoadBalancer
+  #loadBalancerIP: 91.103.87.28   # only if supported in your cluster. kube-config must be set !
+  #delete above 'type' and change below 'type' for flat service IP (No Balancer or external no Octavia Balancer)
+  #type: ClusterIP
   selector:
     app: fd-portal
   ports:
     - name: http
       port: 80
       targetPort: 8000
+
