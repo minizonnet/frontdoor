@@ -74,6 +74,7 @@ def build_blueprint(settings, keystone_client, defense):
             "home.html",
             username=session.get("username"),
             horizon_url=settings.horizon_url,
+            skyline_url=settings.skyline_url,
         )
 
     @bp.route("/login", methods=["GET", "POST"])

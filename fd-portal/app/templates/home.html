@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block subtitle %}Access granted{% endblock %}
+{% block subtitle %}Choose your graphical interface{% endblock %}
 
 {% block card %}
   <div class="topline">
@@ -8,7 +8,22 @@
   </div>
 
   <div class="row">
-    <a class="link" href="{{ horizon_url }}">Open Horizon</a>
+    <div class="intro">
+      This is the same portal entry point, but you can choose your preferred <b>Graphical User Interface</b>.
+      Horizon is the classic OpenStack dashboard, Skyline is the modern dashboard.
+    </div>
+  </div>
+
+  <div class="ctaGrid">
+    <a class="ctaBtn ctaPrimary" href="{{ horizon_url }}">
+      <div class="ctaTitle">Open Horizon</div>
+      <div class="ctaSub">Classic OpenStack Dashboard</div>
+    </a>
+
+    <a class="ctaBtn ctaSecondary" href="{{ skyline_url }}">
+      <div class="ctaTitle">Open Skyline</div>
+      <div class="ctaSub">Modern OpenStack Dashboard</div>
+    </a>
   </div>
 
   <div class="row">
@@ -18,6 +33,7 @@
   </div>
 
   <div class="muted">
-    Next: enforce authorization (project/role allowlist) before granting access.
+    Note: This portal validates Keystone credentials but does not create an SSO session inside the dashboards yet.
   </div>
 {% endblock %}
+

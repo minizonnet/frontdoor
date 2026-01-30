@@ -306,3 +306,58 @@ input:focus {
   50%  { transform: translate3d(0, -22px, 0) scale(1.08); }
   100% { transform: translate3d(0, 0, 0) scale(1); }
 }
+
+.intro {
+  color: rgba(232,238,252,0.85);
+  font-size: 13px;
+  line-height: 1.45;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.04);
+}
+
+.ctaGrid {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+.ctaBtn {
+  display: block;
+  text-decoration: none;
+  border-radius: 16px;
+  padding: 14px 14px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.06);
+  box-shadow: 0 14px 30px rgba(0,0,0,0.25);
+  transition: transform 0.10s ease, filter 0.10s ease, border-color 0.10s ease;
+}
+
+.ctaBtn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.03);
+  border-color: rgba(110,231,255,0.35);
+}
+
+.ctaTitle {
+  font-weight: 900;
+  letter-spacing: 0.2px;
+  font-size: 16px;
+}
+
+.ctaSub {
+  margin-top: 4px;
+  color: rgba(232,238,252,0.70);
+  font-size: 12px;
+}
+
+.ctaPrimary {
+  background: linear-gradient(135deg, rgba(110,231,255,0.20), rgba(167,139,250,0.12));
+}
+
+.ctaSecondary {
+  background: linear-gradient(135deg, rgba(167,139,250,0.18), rgba(110,231,255,0.10));
+}
+

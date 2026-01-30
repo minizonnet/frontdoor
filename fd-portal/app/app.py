@@ -1,32 +1,37 @@
 import os
 from flask import Flask
+from werkzeug.middleware.proxy_fix import ProxyFix
+
 from config import Settings
 from keystone import KeystoneClient
-from ratelimit import LoginDefense
 from security import configure_session, add_security_headers
 from routes import build_blueprint
+from ratelimit import LoginDefense  # or whatever your defense class is named
+
 
 def create_app() -> Flask:
     app = Flask(__name__)
 
-    # Flask session signing key
-    app.secret_key = os.environ.get("FLASK_SECRET", "CHANGE_ME_LONG_RANDOM")
+    # If you are behind a reverse proxy / ingress / LB, this makes Flask respect:
+    # X-Forwarded-For, X-Forwarded-Proto, X-Forwarded-Host
+    # Crucial when SESSION_COOKIE_SECURE=True behind HTTPS termination.
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 
+    app.secret_key = os.environ.get("FLASK_SECRET", "CHANGE_ME_LONG_RANDOM")
     settings = Settings()
 
     configure_session(app, cookie_secure=settings.session_cookie_secure)
     add_security_headers(app)
 
     keystone_client = KeystoneClient(settings.keystone_url, settings.user_domain)
+
     defense = LoginDefense(
-    window_sec=settings.defense_window_sec,
-    soft_lockout_sec=settings.defense_soft_lockout_sec,
-    captcha_after_failures=settings.defense_captcha_after_failures,
-    max_failures_before_block=settings.defense_max_failures_before_block,
+        window_sec=settings.defense_window_sec,
+        soft_lockout_sec=settings.defense_soft_lockout_sec,
+        captcha_after_failures=settings.defense_captcha_after_failures,
+        max_failures_before_block=settings.defense_max_failures_before_block,
     )
 
-
-    # Provide brand variables to all templates
     @app.context_processor
     def _brand():
         return {
@@ -39,11 +44,11 @@ def create_app() -> Flask:
         }
 
     app.register_blueprint(build_blueprint(settings, keystone_client, defense))
-
     return app
 
-# Gunicorn entrypoint: gunicorn -b 0.0.0.0:8000 app:app
+
 app = create_app()
 
 if __name__ == "__main__":
     app.run("127.0.0.1", 8000, debug=False)
+

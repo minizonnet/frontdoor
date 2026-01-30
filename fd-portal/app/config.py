@@ -17,6 +17,7 @@ class Settings:
     keystone_url: str = os.environ.get("KEYSTONE_URL", "https://keystone.example.com/v3").rstrip("/")
     user_domain: str = os.environ.get("USER_DOMAIN", "Default")
     horizon_url: str = os.environ.get("HORIZON_URL", "https://opole.minizon.net/")
+    skyline_url: str = os.environ.get("SKYLINE_URL", "https://opole.minizon.net:9999/")
 
     # Branding (can point to your website, or host locally under /static/img)
     brand_name: str = os.environ.get("BRAND_NAME", "MINIZON")
