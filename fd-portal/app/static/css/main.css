@@ -95,7 +95,7 @@ body::before {
 
 .card {
   position: relative;
-  background: linear-gradient(180deg, var(--card), rgba(255,255,255,0.04));
+  background: linear-gradient(180deg, rgba(255,255,255,0.09), rgba(255,255,255,0.05));
   border: 1px solid rgba(255,255,255,0.10);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
@@ -307,14 +307,16 @@ input:focus {
   100% { transform: translate3d(0, 0, 0) scale(1); }
 }
 
+/* ===== Improved logged-in CTA contrast ===== */
+
 .intro {
-  color: rgba(232,238,252,0.85);
+  color: rgba(232,238,252,0.92);
   font-size: 13px;
-  line-height: 1.45;
-  padding: 10px 12px;
+  line-height: 1.5;
+  padding: 12px 12px;
   border-radius: 12px;
-  border: 1px solid rgba(255,255,255,0.10);
-  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.16);
+  background: rgba(0,0,0,0.18);
 }
 
 .ctaGrid {
@@ -324,40 +326,65 @@ input:focus {
   gap: 12px;
 }
 
+/* Base CTA card */
 .ctaBtn {
   display: block;
   text-decoration: none;
   border-radius: 16px;
-  padding: 14px 14px;
-  border: 1px solid rgba(255,255,255,0.12);
-  background: rgba(255,255,255,0.06);
-  box-shadow: 0 14px 30px rgba(0,0,0,0.25);
-  transition: transform 0.10s ease, filter 0.10s ease, border-color 0.10s ease;
+  padding: 16px 16px;
+  border: 1px solid rgba(255,255,255,0.18);
+  background: rgba(0,0,0,0.18);
+  box-shadow: 0 16px 40px rgba(0,0,0,0.35);
+  transition: transform 0.10s ease, filter 0.10s ease, border-color 0.10s ease, box-shadow 0.10s ease;
 }
 
 .ctaBtn:hover {
   transform: translateY(-1px);
-  filter: brightness(1.03);
-  border-color: rgba(110,231,255,0.35);
+  filter: brightness(1.05);
+  border-color: rgba(255,255,255,0.30);
+  box-shadow: 0 20px 52px rgba(0,0,0,0.45);
 }
 
+.ctaBtn:active {
+  transform: translateY(0px);
+}
+
+/* Text inside CTA */
 .ctaTitle {
   font-weight: 900;
   letter-spacing: 0.2px;
   font-size: 16px;
+  color: rgba(232,238,252,0.98);
+  text-shadow: 0 1px 0 rgba(0,0,0,0.25);
 }
 
 .ctaSub {
-  margin-top: 4px;
-  color: rgba(232,238,252,0.70);
+  margin-top: 6px;
+  color: rgba(232,238,252,0.80);
   font-size: 12px;
+  line-height: 1.35;
 }
 
+/* Stronger colored accents */
 .ctaPrimary {
-  background: linear-gradient(135deg, rgba(110,231,255,0.20), rgba(167,139,250,0.12));
+  background:
+    linear-gradient(135deg, rgba(110,231,255,0.22), rgba(167,139,250,0.14)),
+    rgba(0,0,0,0.18);
+  border-color: rgba(110,231,255,0.22);
+}
+
+.ctaPrimary:hover {
+  border-color: rgba(110,231,255,0.45);
 }
 
 .ctaSecondary {
-  background: linear-gradient(135deg, rgba(167,139,250,0.18), rgba(110,231,255,0.10));
+  background:
+    linear-gradient(135deg, rgba(167,139,250,0.22), rgba(110,231,255,0.12)),
+    rgba(0,0,0,0.18);
+  border-color: rgba(167,139,250,0.22);
+}
+
+.ctaSecondary:hover {
+  border-color: rgba(167,139,250,0.45);
 }
 
