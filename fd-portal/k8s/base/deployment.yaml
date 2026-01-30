@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: fd-portal
-          image: fd-portal:01
+          image: tomtek/fd-portal:010
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8000
