@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: fd-portal
-          image: tomtek/fd-portal:010
+          image: tomtek/fd-portal:011
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8000
@@ -40,6 +40,8 @@ spec:
                 secretKeyRef:
                   name: fd-portal-secret
                   key: FLASK_SECRET
+            - name: SESSION_COOKIE_SECURE
+              value: "false"
             - name: SKYLINE_URL
               valueFrom:
                 configMapKeyRef:
