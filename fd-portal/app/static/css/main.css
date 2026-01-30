@@ -171,6 +171,32 @@ input:focus {
   font-size: 13px;
 }
 
+.alert-warn {
+  border: 1px solid rgba(255, 196, 0, 0.35);
+  background: rgba(255, 196, 0, 0.10);
+  color: rgba(255, 240, 200, 0.95);
+}
+
+.alert-danger {
+  border: 1px solid rgba(255,107,107,0.35);
+  background: rgba(255,107,107,0.10);
+  color: #ffd1d1;
+}
+
+.captchaBox {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(0,0,0,0.14);
+}
+
+.captchaQ {
+  font-size: 13px;
+  color: rgba(232,238,252,0.88);
+}
+
 .muted {
   margin-top: 12px;
   color: var(--muted);

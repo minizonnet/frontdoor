@@ -2,7 +2,7 @@ import os
 from flask import Flask
 from config import Settings
 from keystone import KeystoneClient
-from ratelimit import RateLimiter
+from ratelimit import LoginDefense
 from security import configure_session, add_security_headers
 from routes import build_blueprint
 
@@ -18,7 +18,13 @@ def create_app() -> Flask:
     add_security_headers(app)
 
     keystone_client = KeystoneClient(settings.keystone_url, settings.user_domain)
-    limiter = RateLimiter(settings.login_window_sec, settings.login_max_attempts)
+    defense = LoginDefense(
+    window_sec=settings.defense_window_sec,
+    soft_lockout_sec=settings.defense_soft_lockout_sec,
+    captcha_after_failures=settings.defense_captcha_after_failures,
+    max_failures_before_block=settings.defense_max_failures_before_block,
+    )
+
 
     # Provide brand variables to all templates
     @app.context_processor
@@ -32,7 +38,7 @@ def create_app() -> Flask:
             "hero_img_url": settings.hero_img_url,
         }
 
-    app.register_blueprint(build_blueprint(settings, keystone_client, limiter))
+    app.register_blueprint(build_blueprint(settings, keystone_client, defense))
 
     return app
 

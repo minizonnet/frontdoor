@@ -7,8 +7,12 @@
     <div class="pill">Keystone v3 • Password</div>
   </div>
 
+  {% if warning %}
+    <div class="alert alert-{{ warning_class }}">{{ warning }}</div>
+  {% endif %}
+
   {% if error %}
-    <div class="alert">{{ error }}</div>
+    <div class="alert alert-danger">{{ error }}</div>
   {% endif %}
 
   <form method="post" autocomplete="on">
@@ -22,6 +26,16 @@
       <input name="password" type="password" autocomplete="current-password" required>
     </div>
 
+    {% if captcha_required %}
+      <div class="row">
+        <label>Captcha</label>
+        <div class="captchaBox">
+          <div class="captchaQ">{{ captcha_question }}</div>
+          <input name="captcha" inputmode="numeric" placeholder="Answer" required>
+        </div>
+      </div>
+    {% endif %}
+
     <div class="row">
       <button class="btn" type="submit">Sign in</button>
     </div>
@@ -31,3 +45,4 @@
     This validates Keystone credentials and opens the portal. It does not create an SSO session in Horizon yet.
   </div>
 {% endblock %}
+
