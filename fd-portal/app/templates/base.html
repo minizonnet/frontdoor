@@ -1,0 +1,52 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ product_name }} • {{ brand_name }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+</head>
+<body style="--bg-img: url('{{ bg_img_url }}'); --hero-img: url('{{ hero_img_url }}'); --accent-img: url('{{ accent_img_url }}');">
+  <div class="floaters" aria-hidden="true">
+    <div class="floater" style="left: 8%; top: 18%; animation-delay: -1s;"></div>
+    <div class="floater" style="left: 16%; top: 72%; animation-delay: -6s;"></div>
+    <div class="floater" style="left: 32%; top: 38%; animation-delay: -3s;"></div>
+    <div class="floater" style="left: 52%; top: 16%; animation-delay: -8s;"></div>
+    <div class="floater" style="left: 72%; top: 30%; animation-delay: -4s;"></div>
+    <div class="floater" style="left: 86%; top: 66%; animation-delay: -10s;"></div>
+    <div class="floater" style="left: 92%; top: 22%; animation-delay: -2s;"></div>
+    <div class="floater" style="left: 40%; top: 84%; animation-delay: -12s;"></div>
+  </div>
+
+  <div class="scene">
+    <div class="wrap">
+      <div class="brand">
+        <div class="logoBox">
+          <img class="logoImg" src="{{ logo_url }}" alt="{{ brand_name }} logo">
+        </div>
+        <div>
+          <p class="title">{{ product_name }}</p>
+          <p class="subtitle">{% block subtitle %}{% endblock %}</p>
+        </div>
+      </div>
+
+      <div class="card">
+        {% block card %}{% endblock %}
+      </div>
+    </div>
+
+    <div class="side">
+      <h3>{{ brand_name }} Cloud Console</h3>
+      <p>
+        Controlled entry point for Horizon. Next: project/role authorization and then real WebSSO when you’re ready.
+      </p>
+      <div class="chips">
+        <div class="chip">Kubernetes</div>
+        <div class="chip">OpenStack</div>
+        <div class="chip">Keystone v3</div>
+        <div class="chip">Horizon</div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

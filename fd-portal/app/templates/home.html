@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block subtitle %}Access granted{% endblock %}
+
+{% block card %}
+  <div class="topline">
+    <div class="pill">User: {{ username }}</div>
+    <div class="pill">{{ brand_name }}</div>
+  </div>
+
+  <div class="row">
+    <a class="link" href="{{ horizon_url }}">Open Horizon</a>
+  </div>
+
+  <div class="row">
+    <form method="post" action="/logout">
+      <button class="btn" type="submit">Logout</button>
+    </form>
+  </div>
+
+  <div class="muted">
+    Next: enforce authorization (project/role allowlist) before granting access.
+  </div>
+{% endblock %}

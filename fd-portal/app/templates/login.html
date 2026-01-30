@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block subtitle %}Sign in with Keystone credentials to reach your cloud console{% endblock %}
+
+{% block card %}
+  <div class="topline">
+    <div class="pill">{{ brand_name }}</div>
+    <div class="pill">Keystone v3 • Password</div>
+  </div>
+
+  {% if error %}
+    <div class="alert">{{ error }}</div>
+  {% endif %}
+
+  <form method="post" autocomplete="on">
+    <div class="row">
+      <label>Username</label>
+      <input name="username" autocomplete="username" required>
+    </div>
+
+    <div class="row">
+      <label>Password</label>
+      <input name="password" type="password" autocomplete="current-password" required>
+    </div>
+
+    <div class="row">
+      <button class="btn" type="submit">Sign in</button>
+    </div>
+  </form>
+
+  <div class="muted">
+    This validates Keystone credentials and opens the portal. It does not create an SSO session in Horizon yet.
+  </div>
+{% endblock %}
