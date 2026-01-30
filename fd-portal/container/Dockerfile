@@ -7,5 +7,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY app/ /app/
 
 EXPOSE 8000
-CMD ["gunicorn", "-b", "0.0.0.0:8000", "--access-logfile", "-", "--error-logfile", "-", "app:app"]
+CMD ["gunicorn", "-b", "0.0.0.0:8000",
+     "--certfile", "/tls/minizon.net.pem",
+     "--keyfile",  "/tls/minizon.net.pem",
+     "--access-logfile", "-", "--error-logfile", "-",
+     "app:app"]
 
