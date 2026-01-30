@@ -26,12 +26,10 @@ def create_app() -> Flask:
     keystone_client = KeystoneClient(settings.keystone_url, settings.user_domain)
 
     defense = LoginDefense(
+        policy=settings.login_policy,
         window_sec=settings.defense_window_sec,
         soft_lockout_sec=settings.defense_soft_lockout_sec,
-        captcha_after_failures=settings.defense_captcha_after_failures,
-        max_failures_before_block=settings.defense_max_failures_before_block,
     )
-
     # Provide brand variables to all templates
     @app.context_processor
     def _brand():

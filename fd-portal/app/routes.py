@@ -1,17 +1,19 @@
+import secrets
 import random
 from flask import Blueprint, request, session, redirect, url_for, render_template
 
 
-def _client_ip(trust_xff: bool) -> str:
-    if trust_xff:
-        xff = request.headers.get("X-Forwarded-For", "")
-        if xff:
-            return xff.split(",")[0].strip()
-    return request.remote_addr or "unknown"
+def _client_key() -> str:
+    """
+    Stable per-browser key stored in the session cookie.
+    Avoids incorrect counting when client IP is NATed/changes via Octavia/kube-proxy.
+    """
+    if "client_id" not in session:
+        session["client_id"] = secrets.token_urlsafe(16)
+    return session["client_id"]
 
 
 def _ensure_captcha():
-    # Store captcha in session (simple math). Regenerate if missing.
     if "captcha_q" in session and "captcha_a" in session:
         return
     a = random.randint(2, 9)
@@ -25,46 +27,45 @@ def _clear_captcha():
     session.pop("captcha_a", None)
 
 
-def _warning_for_state(state):
+def _ui_for_state(policy, state):
     """
-    Return (message, css_class) based on number of failures and stage.
-    IMPORTANT: Do NOT include 'Invalid credentials' here; that is handled by `error`.
+    Returns (warning_message, warning_class, require_captcha, http_status_if_locked)
     """
     f = state.failures
 
-    # Locked (simulated)
     if state.locked_out:
-        msg = (
-            f"Too many incorrect attempts. Your IP would be blocked now "
-            f"(blocking module later). Try again in ~{state.lockout_seconds_left}s."
+        return (
+            f"{policy.msg_would_block} Try again in ~{state.lockout_seconds_left}s.",
+            "danger",
+            True,
+            429,
         )
-        return (msg, "danger")
 
-    # Failures 1..3: show remaining tries (2,1,0)
-    if 1 <= f <= 3:
-        remaining = 3 - f
-        if remaining == 2:
-            return ("You have 2 more tries.", "warn")
-        if remaining == 1:
-            return ("You have 1 more try.", "warn")
-        return ("This was your last try before captcha is enabled.", "warn")
+    require_captcha = state.captcha_required
 
-    # Failure 4: warn captcha next
-    if f == 4:
-        return ("Next attempt will require a captcha.", "warn")
+    # warnings for tries remaining BEFORE captcha
+    if 1 <= f <= policy.warn_until_failures:
+        remaining = policy.warn_until_failures - f
+        if remaining > 0:
+            return (f"You have {remaining} more {'tries' if remaining != 1 else 'try'}.", "warn", require_captcha, None)
+        return ("This was your last try before captcha is enabled.", "warn", require_captcha, None)
 
-    # Failures 5..6: captcha stage warning, in red
-    if f == 5:
-        return ("Captcha is now required. 2 more incorrect attempts and your IP will be blocked.", "danger")
-    if f == 6:
-        return ("Captcha is required. 1 more incorrect attempt and your IP will be blocked.", "danger")
+    # warning at the point captcha is announced
+    if f == policy.captcha_warn_failure:
+        # show a guidance warning only (error is always "Invalid credentials")
+        return ("Next attempt will require a captcha.", "warn", require_captcha, None)
 
-    # f==0 (no warning)
-    return (None, None)
+    # captcha phase: countdown to block
+    if f >= policy.block_warn_from_failure and f < policy.block_after_failure:
+        remaining = policy.block_after_failure - f
+        return (policy.msg_block_countdown.format(n=remaining), "danger", require_captcha, None)
+
+    return (None, None, require_captcha, None)
 
 
 def build_blueprint(settings, keystone_client, defense):
     bp = Blueprint("fd", __name__)
+    policy = settings.login_policy
 
     @bp.get("/")
     def home():
@@ -79,11 +80,10 @@ def build_blueprint(settings, keystone_client, defense):
 
     @bp.route("/login", methods=["GET", "POST"])
     def login():
-        ip = _client_ip(settings.trust_x_forwarded_for)
-        st = defense.state(ip)
+        key = _client_key()
+        st = defense.state(key)
 
-        warn, warn_class = _warning_for_state(st)
-        require_captcha = st.captcha_required and not st.locked_out
+        warn, warn_class, require_captcha, locked_status = _ui_for_state(policy, st)
         if require_captcha:
             _ensure_captcha()
 
@@ -99,7 +99,6 @@ def build_blueprint(settings, keystone_client, defense):
 
         # POST
         if st.locked_out:
-            # Simulated lockout (block module later)
             return render_template(
                 "login.html",
                 error=None,
@@ -107,24 +106,24 @@ def build_blueprint(settings, keystone_client, defense):
                 warning_class=warn_class or "danger",
                 captcha_required=True,
                 captcha_question=session.get("captcha_q"),
-            ), 429
+            ), (locked_status or 429)
 
-        # If captcha required, validate it first
+        # Captcha validation if required
         if require_captcha:
             user_captcha = request.form.get("captcha", "").strip()
             expected = session.get("captcha_a", "")
             if not user_captcha or user_captcha != expected:
-                st2 = defense.record_failure(ip)
+                st2 = defense.record_failure(key)
                 _ensure_captcha()
-                w2, wc2 = _warning_for_state(st2)
+                w2, wc2, req2, locked2 = _ui_for_state(policy, st2)
                 return render_template(
                     "login.html",
                     error="Incorrect captcha.",
                     warning=w2,
                     warning_class=wc2 or "danger",
-                    captcha_required=True,
+                    captcha_required=req2 and not st2.locked_out,
                     captcha_question=session.get("captcha_q"),
-                ), 401
+                ), (locked2 or 401)
 
         username = request.form.get("username", "").strip()
         password = request.form.get("password", "")
@@ -139,38 +138,40 @@ def build_blueprint(settings, keystone_client, defense):
                 captcha_question=session.get("captcha_q"),
             ), 400
 
-        # Validate Keystone creds
+        # Keystone auth
         try:
             keystone_client.validate_password(username, password)
         except Exception:
-            st2 = defense.record_failure(ip)
-
-            # If we just transitioned into captcha stage, ensure captcha exists
+            st2 = defense.record_failure(key)
             if st2.captcha_required:
                 _ensure_captcha()
+            w2, wc2, req2, locked2 = _ui_for_state(policy, st2)
 
-            w2, wc2 = _warning_for_state(st2)
             return render_template(
                 "login.html",
-                error="Invalid credentials",
+                error=policy.msg_invalid_generic,   # "Invalid credentials."
                 warning=w2,
                 warning_class=wc2,
-                captcha_required=st2.captcha_required and not st2.locked_out,
+                captcha_required=req2 and not st2.locked_out,
                 captcha_question=session.get("captcha_q"),
-            ), 401
+            ), (locked2 or 401)
 
-        # SUCCESS: reset defense state + clear captcha, then log user in
-        defense.reset(ip)
+        # SUCCESS
+        defense.reset(key)
         _clear_captcha()
 
-        session.clear()
+        # Do NOT session.clear() (it would delete client_id and break counting consistency)
         session["logged_in"] = True
         session["username"] = username
         return redirect(url_for("fd.home"))
 
     @bp.post("/logout")
     def logout():
+        # Keep client_id stable across logout/login cycles
+        client_id = session.get("client_id")
         session.clear()
+        if client_id:
+            session["client_id"] = client_id
         return redirect(url_for("fd.login"))
 
     return bp

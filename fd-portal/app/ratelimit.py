@@ -11,29 +11,17 @@ class DefenseState:
 
 class LoginDefense:
     """
-    In-memory (per pod) login defense state machine keyed by client IP.
-
-    Policy:
-      - failures 1..3: no captcha; show remaining tries (2,1,0)
-      - failure 4: no captcha; warn "captcha on next attempt"
-      - failures 5..6: captcha required; warn "2 more incorrect and your IP will be blocked" then "1 more..."
-      - failures >=7: treat as locked out (simulate block for now)
+    In-memory (per pod) defense state machine keyed by a stable client key.
+    Uses LoginPolicy as the single source of truth for thresholds.
     """
 
-    def __init__(
-        self,
-        window_sec: int = 900,                # reset counters after inactivity window
-        soft_lockout_sec: int = 300,          # when failures>=7, simulate a lockout
-        captcha_after_failures: int = 4,      # captcha starts on attempt #5 (after 4 failures)
-        max_failures_before_block: int = 7,   # would block on 7th failure
-    ):
+    def __init__(self, policy, window_sec: int = 900, soft_lockout_sec: int = 300):
+        self.policy = policy
         self.window_sec = window_sec
         self.soft_lockout_sec = soft_lockout_sec
-        self.captcha_after_failures = captcha_after_failures
-        self.max_failures_before_block = max_failures_before_block
 
-        self._hits = defaultdict(lambda: deque())     # ip -> deque[timestamps]
-        self._lockout_until = {}                      # ip -> unix ts
+        self._hits = defaultdict(lambda: deque())  # key -> deque[timestamps]
+        self._lockout_until = {}                   # key -> unix ts
 
     def _prune(self, key: str) -> None:
         now = time.time()
@@ -45,15 +33,17 @@ class LoginDefense:
         now = time.time()
         self._prune(key)
 
+        failures = len(self._hits[key])
+
         until = self._lockout_until.get(key, 0)
         locked = now < until
         left = int(until - now) if locked else 0
 
-        failures = len(self._hits[key])
-        captcha_required = failures >= (self.captcha_after_failures + 1)  # captcha from 5th attempt
-        # If we have reached or exceeded the block threshold, consider locked (even if lockout timer not set yet)
-        if failures >= self.max_failures_before_block and not locked:
-            # start a soft lockout to simulate future IP blocking behavior
+        # Captcha starts at (policy.captcha_start_failure), e.g. 5th failure
+        captcha_required = failures >= self.policy.captcha_start_failure
+
+        # Simulate block/lockout at policy.block_after_failure, e.g. 7th failure
+        if failures >= self.policy.block_after_failure and not locked:
             self._lockout_until[key] = now + self.soft_lockout_sec
             locked = True
             left = int(self.soft_lockout_sec)
