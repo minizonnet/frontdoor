@@ -171,6 +171,16 @@ input:focus {
   font-size: 13px;
 }
 
+.alertTitle {
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+
+.alertSub {
+  font-size: 12px;
+  opacity: 0.92;
+}
+
 .alert-warn {
   border: 1px solid rgba(255, 196, 0, 0.35);
   background: rgba(255, 196, 0, 0.10);

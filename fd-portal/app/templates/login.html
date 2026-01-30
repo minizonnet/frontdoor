@@ -7,12 +7,23 @@
     <div class="pill">Keystone v3 • Password</div>
   </div>
 
-  {% if warning %}
-    <div class="alert alert-{{ warning_class }}">{{ warning }}</div>
-  {% endif %}
-
+  {# 
+    If there's an error (wrong creds / captcha), show it prominently in red.
+    If there's also a warning (tries left / captcha next), show it INSIDE the error box as a smaller line.
+    This guarantees "Invalid credentials" is visible on every failure.
+  #}
   {% if error %}
-    <div class="alert alert-danger">{{ error }}</div>
+    <div class="alert alert-danger">
+      <div class="alertTitle">{{ error }}</div>
+      {% if warning %}
+        <div class="alertSub">{{ warning }}</div>
+      {% endif %}
+    </div>
+  {% else %}
+    {# No error, but we may still have warnings (e.g., lockout countdown) #}
+    {% if warning %}
+      <div class="alert alert-{{ warning_class }}">{{ warning }}</div>
+    {% endif %}
   {% endif %}
 
   <form method="post" autocomplete="on">
