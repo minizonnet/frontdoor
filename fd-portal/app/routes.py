@@ -12,6 +12,17 @@ def _client_key() -> str:
         session["client_id"] = secrets.token_urlsafe(16)
     return session["client_id"]
 
+def _client_ip(trust_xff: bool) -> str:
+    """
+    Best-effort client IP for future IP-based blocking/logging.
+    Note: behind Octavia/kube-proxy the true client IP may be lost unless
+    externalTrafficPolicy=Local or X-Forwarded-For is trustworthy.
+    """
+    if trust_xff:
+        xff = request.headers.get("X-Forwarded-For", "")
+        if xff:
+            return xff.split(",")[0].strip()
+    return request.remote_addr or "unknown"
 
 def _ensure_captcha():
     if "captcha_q" in session and "captcha_a" in session:
@@ -82,6 +93,7 @@ def build_blueprint(settings, keystone_client, defense):
     def login():
         key = _client_key()
         st = defense.state(key)
+        ip = _client_ip(settings.trust_x_forwarded_for)
 
         warn, warn_class, require_captcha, locked_status = _ui_for_state(policy, st)
         if require_captcha:
