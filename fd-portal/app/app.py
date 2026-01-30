@@ -6,18 +6,18 @@ from config import Settings
 from keystone import KeystoneClient
 from security import configure_session, add_security_headers
 from routes import build_blueprint
-from ratelimit import LoginDefense  # or whatever your defense class is named
+from ratelimit import LoginDefense
 
 
 def create_app() -> Flask:
     app = Flask(__name__)
 
-    # If you are behind a reverse proxy / ingress / LB, this makes Flask respect:
-    # X-Forwarded-For, X-Forwarded-Proto, X-Forwarded-Host
-    # Crucial when SESSION_COOKIE_SECURE=True behind HTTPS termination.
+    # Respect X-Forwarded-* headers when behind LB/Ingress
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 
+    # Flask session signing key
     app.secret_key = os.environ.get("FLASK_SECRET", "CHANGE_ME_LONG_RANDOM")
+
     settings = Settings()
 
     configure_session(app, cookie_secure=settings.session_cookie_secure)
@@ -32,6 +32,7 @@ def create_app() -> Flask:
         max_failures_before_block=settings.defense_max_failures_before_block,
     )
 
+    # Provide brand variables to all templates
     @app.context_processor
     def _brand():
         return {
@@ -47,6 +48,7 @@ def create_app() -> Flask:
     return app
 
 
+# Gunicorn entrypoint: app:app
 app = create_app()
 
 if __name__ == "__main__":

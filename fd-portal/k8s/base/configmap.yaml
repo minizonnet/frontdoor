@@ -7,3 +7,4 @@ data:
   KEYSTONE_URL: "https://opole.minizon.net:5000/v3"
   USER_DOMAIN: "Default"
   HORIZON_URL: "https://opole.minizon.net/"
+  SKYLINE_URL: "https://opole.minizon.net:9999/"

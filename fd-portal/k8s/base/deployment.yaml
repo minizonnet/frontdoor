@@ -40,6 +40,11 @@ spec:
                 secretKeyRef:
                   name: fd-portal-secret
                   key: FLASK_SECRET
+            - name: SKYLINE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: fd-portal-config
+                  key: SKYLINE_URL
           readinessProbe:
             httpGet:
               path: /
