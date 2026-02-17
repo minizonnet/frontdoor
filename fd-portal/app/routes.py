@@ -55,11 +55,9 @@ def _ui_for_state(policy, state):
     require_captcha = state.captcha_required
 
     # warnings for tries remaining BEFORE captcha
-    if 1 <= f <= policy.warn_until_failures:
+    if 1 <= f < policy.warn_until_failures:
         remaining = policy.warn_until_failures - f
-        if remaining > 0:
-            return (f"You have {remaining} more {'tries' if remaining != 1 else 'try'}.", "warn", require_captcha, None)
-        return ("This was your last try before captcha is enabled.", "warn", require_captcha, None)
+        return (f"You have {remaining} more {'tries' if remaining != 1 else 'try'}.", "warn", require_captcha, None)
 
     # warning at the point captcha is announced
     if f == policy.captcha_warn_failure:
