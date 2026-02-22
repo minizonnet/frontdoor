@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Chart.Name }}-config
+  namespace: {{ .Release.Namespace }}
+data:
+  KEYSTONE_URL: {{ .Values.config.keystoneUrl | quote }}
+  USER_DOMAIN: {{ .Values.config.userDomain | quote }}
+  HORIZON_URL: {{ .Values.config.horizonUrl | quote }}
+  SKYLINE_URL: {{ .Values.config.skylineUrl | quote }}

@@ -1,0 +1,48 @@
+replicaCount: 2
+
+image:
+  repository: tomtek/fd-portal
+  tag: "013"
+  pullPolicy: IfNotPresent
+
+service:
+  type: LoadBalancer
+  port: 443
+  targetPort: 8000
+  annotations:
+    loadbalancer.openstack.org/load-balancer-address: "91.103.87.28"
+
+ingress:
+  enabled: true
+  className: nginx
+  host: console.minizon.net
+  tls:
+    enabled: true
+    secretName: fd-portal-tls
+
+config:
+  keystoneUrl: "https://opole.minizon.net:5000/v3"
+  userDomain: "Default"
+  horizonUrl: "https://opole.minizon.net/"
+  skylineUrl: "https://opole.minizon.net:9999/"
+
+secrets:
+  flaskSecret: "HJAhM2y/v5vHRUmt7E4uBp3u+/jr4efSyGDWpHAC9nSszhB+Pf1b6V/4+hxmVW+6"
+
+tls:
+  pemFile: "/tls/minizon.net.pem"
+  secretName: fd-portal-tls-pem
+
+sessionCookieSecure: "true"
+
+probes:
+  readiness:
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 3
+    failureThreshold: 6
+  liveness:
+    initialDelaySeconds: 15
+    periodSeconds: 20
+    timeoutSeconds: 3
+    failureThreshold: 3

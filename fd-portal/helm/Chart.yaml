@@ -1,0 +1,6 @@
+apiVersion: v2
+name: fd-portal
+description: FrontDoor Portal - OpenStack authentication portal
+type: application
+version: 0.1.0
+appVersion: "013"

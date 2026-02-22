@@ -49,6 +49,10 @@ fd-portal/
         main.css
   container/
     Dockerfile
+
+  # Deployment options (maintained in parallel branches):
+
+  # Option 1: Kustomize (branch: main or k8s)
   k8s/
     base/
       namespace.yaml
@@ -61,6 +65,21 @@ fd-portal/
     overlays/
       dev/
       prod/
+
+  # Option 2: Helm (branch: helm)
+  helm/
+    Chart.yaml
+    values.yaml
+    values-dev.yaml
+    values-prod.yaml
+    templates/
+      _helpers.tpl
+      namespace.yaml
+      configmap.yaml
+      secret.yaml
+      deployment.yaml
+      service.yaml
+      ingress.yaml
 ```
 
 ---
@@ -124,26 +143,37 @@ Open: `http://localhost:8000/login`
 
 ---
 
-## Kubernetes deployment (Kustomize)
+## Kubernetes deployment
 
-> You can deploy either via **Ingress** (typical) or **Service type: LoadBalancer** (Octavia). Pick one approach.
+Two deployment methods are maintained in **parallel branches**:
+
+| Method | Branch | Replicas (dev/prod) |
+|--------|--------|---------------------|
+| Kustomize | `main` / `k8s` | 1 / 3 |
+| Helm | `helm` | 2 / 3 |
+
+> Both support **Ingress** (typical) or **Service type: LoadBalancer** (Octavia).
 
 ### Prerequisites
 
 - Working `kubectl` context for the cluster
-- Image accessible from the cluster: `tomtek/fd-portal:01`
-- Namespace is `fd-portal` (from manifests)
+- Image accessible from the cluster: `tomtek/fd-portal:013` (DockerHub)
+- Namespace: `fd-portal`
 - If using Octavia: cluster must support `Service type: LoadBalancer`
 
-### Set image
+---
+
+### Option 1: Kustomize deployment
+
+#### Set image
 
 Edit `fd-portal/k8s/base/deployment.yaml`:
 
 ```yaml
-image: tomtek/fd-portal:01
+image: tomtek/fd-portal:013
 ```
 
-### Set endpoints
+#### Set endpoints
 
 Edit `fd-portal/k8s/base/configmap.yaml`:
 
@@ -153,7 +183,7 @@ USER_DOMAIN: "Default"
 HORIZON_URL: "https://opole.minizon.net/"
 ```
 
-### Set secret
+#### Set secret
 
 Edit `fd-portal/k8s/base/secret.yaml`:
 
@@ -167,11 +197,76 @@ Generate a strong secret:
 openssl rand -base64 48
 ```
 
-### Deploy (dev overlay)
+#### Deploy (dev overlay)
 
 ```bash
 kubectl apply -k fd-portal/k8s/overlays/dev
 ```
+
+#### Deploy (prod overlay)
+
+```bash
+kubectl apply -k fd-portal/k8s/overlays/prod
+```
+
+---
+
+### Option 2: Helm deployment
+
+#### Configure values
+
+Edit `fd-portal/helm/values.yaml` for defaults, or use environment-specific files:
+
+- `values-dev.yaml` - development (2 replicas)
+- `values-prod.yaml` - production (3 replicas)
+
+Key configuration in `values.yaml`:
+
+```yaml
+image:
+  repository: tomtek/fd-portal
+  tag: "013"
+
+config:
+  keystoneUrl: "https://opole.minizon.net:5000/v3"
+  userDomain: "Default"
+  horizonUrl: "https://opole.minizon.net/"
+  skylineUrl: "https://opole.minizon.net:9999/"
+
+secrets:
+  flaskSecret: "<LONG_RANDOM_VALUE>"
+
+service:
+  type: LoadBalancer
+  annotations:
+    loadbalancer.openstack.org/load-balancer-address: "91.103.87.28"
+```
+
+#### Deploy (dev)
+
+```bash
+helm install fd-portal ./fd-portal/helm -n fd-portal --create-namespace -f fd-portal/helm/values-dev.yaml
+```
+
+#### Deploy (prod)
+
+```bash
+helm install fd-portal ./fd-portal/helm -n fd-portal --create-namespace -f fd-portal/helm/values-prod.yaml
+```
+
+#### Upgrade
+
+```bash
+helm upgrade fd-portal ./fd-portal/helm -n fd-portal -f fd-portal/helm/values-prod.yaml
+```
+
+#### Uninstall
+
+```bash
+helm uninstall fd-portal -n fd-portal
+```
+
+---
 
 ### Watch rollout
 
